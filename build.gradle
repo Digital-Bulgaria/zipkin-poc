@@ -5,18 +5,16 @@ buildscript {
 	}
 	repositories {
 		mavenCentral()
-		maven { url "https://artifactory.rewe-digital.com/artifactory/plugins-snapshot" }
 	}
 	dependencies {
 		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-		classpath("com.rewedigital.fulfillment.gradle.gcloud:shangri-deploy-plugin:${shangriDeployPluginVersion}")
 	}
 }
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
-apply from: './deploy.gradle'
+
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
