@@ -1,0 +1,81 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ SERVICE_NAME }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fulfillment
+      component: {{ SERVICE_NAME }}
+  template:
+    metadata:
+      labels:
+        app: fulfillment
+        component: {{ SERVICE_NAME }}
+      annotations:
+        rewedigital.com/tribe: "fulfillment"    # fulfillment or ecom
+        rewedigital.com/domain: "inventory"     # squad / domain of the service
+        rewedigital.com/team: "Shangri Llama"   # teamname
+        rewedigital.com/live: "false"           # if someone needs to be woken at night, should the service be unavailable
+    spec:
+      volumes:
+      - name: cloudsql-zipkin-poc-instance-credentials
+        secret:
+          secretName: cloudsql-zipkin-poc-instance-credentials
+      - name: ssl-certs
+        hostPath:
+          path: /etc/ssl/certs
+      containers:
+      - name: {{ SERVICE_NAME }}
+        image: {{ IMAGE_NAME }}:{{ IMAGE_VERSION }}
+        ports:
+        - containerPort: 8080
+          name: server-port
+        livenessProbe:
+          httpGet:
+            path: /admin/healthcheck
+            port: 8080
+          initialDelaySeconds: 300
+          periodSeconds: 20
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /admin/healthcheck
+            port: 8080
+          initialDelaySeconds: 300
+          periodSeconds: 20
+          timeoutSeconds: 5
+        env:
+        #Logging Configurations - comes from REWE Logging Starter
+        - name : LOGGING_CONFIG
+          value: "classpath:logging/logback-spring.xml"
+        #GCloud logging
+        - name: GCLOUD_ENABLED
+          value: "true"
+        #Magic field, no real idea what's up here.
+        - name: ADDITIONAL_APPLICATION_FIELDS
+          value: ', "message":"%message"'
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: cloudsql-zipkin-poc-db-credentials
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cloudsql-zipkin-poc-db-credentials
+              key: password
+        volumeMounts:
+      - image: gcr.io/cloudsql-docker/gce-proxy:1.11
+        name: cloudsql-proxy
+        command: ["/cloud_sql_proxy", "--dir=/cloudsql",
+                  "-instances={{ CLOUD_DEPLOYMENT_PROJECT }}:europe-west1:zipkin-poc-database=tcp:3306",
+                  "-credential_file=/secrets/cloudsql/credentials.json"]
+        volumeMounts:
+          - name: cloudsql-zipkin-poc-instance-credentials
+            mountPath: /secrets/cloudsql
+            readOnly: true
+          - name: ssl-certs
+            mountPath: /etc/ssl/certs
