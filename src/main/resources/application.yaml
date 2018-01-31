@@ -1,2 +1,11 @@
-server:
-  port: 9411
+spring:
+  datasource:
+    schema: classpath:/mysql.sql
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/zipkin?autoReconnect=true
+    username: "${DB_USER:root}"
+    password: "${DB_PASSWORD:}"
+    continueOnError: true
+    driver-class-name: "com.mysql.cj.jdbc.Driver"
+zipkin:
+  storage:
+    type: mysql

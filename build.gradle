@@ -1,12 +1,15 @@
 buildscript {
 	ext {
 		springBootVersion = '1.5.9.RELEASE'
+		shangriDeployPluginVersion = '0.0.3-SNAPSHOT'
 	}
 	repositories {
 		mavenCentral()
+		maven { url "https://artifactory.rewe-digital.com/artifactory/plugins-snapshot" }
 	}
 	dependencies {
 		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath("com.rewedigital.fulfillment.gradle.gcloud:shangri-deploy-plugin:${shangriDeployPluginVersion}")
 	}
 }
 
@@ -23,14 +26,20 @@ repositories {
 	mavenCentral()
 }
 
+ext {
+	zipkinVersion = '2.4.5'
+}
 
 dependencies {
 	compile('org.springframework.boot:spring-boot-starter')
 	compile('org.springframework.boot:spring-boot-starter-security')
+	compile('org.springframework.boot:spring-boot-starter-jdbc')
 
-	compile('io.zipkin.java:zipkin-server:2.4.5')
-	compile('io.zipkin.java:zipkin-autoconfigure-ui:2.4.5')
+	compile("io.zipkin.java:zipkin-server:${zipkinVersion}")
+	compile("io.zipkin.java:zipkin-autoconfigure-ui:${zipkinVersion}")
+	compile("io.zipkin.java:zipkin-autoconfigure-storage-mysql:${zipkinVersion}")
 
+	runtime('mysql:mysql-connector-java:6.0.6')
 
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 }
